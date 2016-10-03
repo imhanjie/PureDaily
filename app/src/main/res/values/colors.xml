@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#FFFFFF</color>
+    <color name="colorPrimaryDark">#FFFFFF</color>
+    <color name="colorAccent">#606060</color>
+
+    <color name="dialog_text_color">#99000000</color>
+    <color name="button_ripple_color">#33000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="settings_item_title">#BB000000</color>
+    <color name="settings_item_desc">#55000000</color>
+    <!--<color name="theme_item_name">#DD000000</color>-->
+    <!--<color name="theme_item_desc">#dd7e7e7e</color>-->
+    <color name="theme_item_name">#ddffffff</color>
+    <color name="theme_item_desc">#ddb9b9b9</color>
+
+    <!--<color name="subscribed_color">#000000</color>-->
+    <!--<color name="un_subscribe_color">#99bfbfbf</color>-->
+    <color name="subscribed_color">#ffffff</color>
+    <color name="un_subscribe_color">#99a9a9a9</color>
+</resources>

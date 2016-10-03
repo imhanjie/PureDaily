@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="CustomView">
+        <attr name="pure_title" format="string|reference"/>
+        <attr name="pure_icon" format="reference"/>
+        <attr name="pure_off" format="string|reference"/>
+        <attr name="pure_on" format="string|reference"/>
+        <attr name="pure_bottomLine" format="boolean"/>
+    </declare-styleable>
+
+
+</resources>

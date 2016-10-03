@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:clickable="true">
+
+    <!--android:background="@drawable/recycler_view_item"-->
+
+    <ImageView
+        android:id="@+id/theme_image"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="25dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="20dp"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/theme_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:textColor="@color/theme_item_name"
+                android:textSize="16sp"/>
+
+            <com.melodyxxx.puredaily.widget.SubscribeTextView
+                android:id="@+id/subscribe_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right|bottom"
+                android:layout_marginRight="25dp"
+                android:textSize="10sp"
+                app:pure_off="未订阅"
+                app:pure_on="已订阅"/>
+
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/theme_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="35dp"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/theme_item_name"
+            android:textSize="13sp"/>
+
+    </LinearLayout>
+
+</LinearLayout>
