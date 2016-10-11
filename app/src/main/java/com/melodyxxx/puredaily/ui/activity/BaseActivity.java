@@ -10,9 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.melodyxxx.puredaily.App;
 import com.melodyxxx.puredaily.R;
-import com.melodyxxx.puredaily.entity.CollectionDao;
 import com.melodyxxx.puredaily.utils.ActivityCollector;
 import com.melodyxxx.puredaily.utils.ColorUtils;
 

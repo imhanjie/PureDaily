@@ -2,7 +2,7 @@ package com.melodyxxx.puredaily.dao;
 
 import com.melodyxxx.puredaily.App;
 import com.melodyxxx.puredaily.entity.daily.Theme;
-import com.melodyxxx.puredaily.entity.ThemeDao;
+import com.melodyxxx.puredaily.entity.daily.ThemeDao;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 

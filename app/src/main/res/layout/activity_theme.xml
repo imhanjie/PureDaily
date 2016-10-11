@@ -8,7 +8,7 @@
     <FrameLayout
         android:id="@+id/fl"
         android:layout_width="match_parent"
-        android:layout_height="130dp">
+        android:layout_height="120dp">
 
         <ImageView
             android:id="@+id/iv_theme_blur"

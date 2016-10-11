@@ -19,10 +19,17 @@
     <string name="action_latest_daily">最新日报</string>
     <string name="action_skin">主题皮肤</string>
     <string name="activity_about_version_info">当前版本: %1$s (Build %2$s)</string>
-    <string name="version_change_log">新增：收藏功能\n\n新增：阅读时可快速滑动到顶部\n\n新增：底部导航栏跟随主题色</string>
+    <string name="version_change_log">release v1.0.1</string>
     <string name="change_log">更新日志</string>
     <string name="activity_about_class_thanks">感谢以下开源项目</string>
-    <string name="thanks_list">▪  Google Design Support Library\n\n▪  xUtils3 - github.com/wyouflf\n\n▪  Glide - github.com/bumptech\n\n▪  AVLoading - github.com/81813780\n\n▪  MaterialDateTimePicker - github.com/wdullaer</string>
+    <string name="thanks_list">▪  Google Design Support Library\n\n
+        ▪  RxJava - github.com/ReactiveX/RxJava\n\n
+        ▪  RxAndroid - github.com/ReactiveX/RxAndroid\n\n
+        ▪  ButterKnife - github.com/JakeWharton/butterknife\n\n
+        ▪  Retrofit - github.com/square/retrofit\n\n
+        ▪  Glide - github.com/bumptech\n\n
+        ▪  GreenDao - github.com/greenrobot/greenDAO\n\n
+        ▪  MaterialDateTimePicker - github.com/wdullaer</string>
     <string name="activity_about_class_open">Github开源地址（欢迎Star、Fork）</string>
     <string name="open_source_address">https://github.com/melodyxxx/PureDaily</string>
     <string name="activity_about_class_statement">声明</string>

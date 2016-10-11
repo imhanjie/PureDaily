@@ -3,6 +3,8 @@ package com.melodyxxx.puredaily.ui.activity;
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
@@ -181,7 +183,7 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
             mCollapsingToolbarLayout.setTitle(mNewsDetails.title);
             if (!PrefUtils.getBoolean(this, PrefConstants.MODE_NO_PIC, false)) {
                 Glide.with(DailyDetailsActivity.this)
-                        .load(mNewsDetails.image)
+                        .load(mNewsDetails.image != null ? mNewsDetails.image : mNewsDetails.images[0])
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .dontTransform()
                         .dontAnimate()
@@ -192,6 +194,9 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
                                 readyBlur();
                             }
                         });
+            } else {
+                mImage.setImageDrawable(new ColorDrawable(Color.BLACK));
+                mBlurImage.setImageDrawable(new ColorDrawable(Color.BLACK));
             }
             if (TextUtils.isEmpty(mNewsDetails.body)) {
                 mWebView.loadUrl(mNewsDetails.share_url);

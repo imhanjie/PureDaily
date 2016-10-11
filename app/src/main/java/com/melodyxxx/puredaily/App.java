@@ -3,8 +3,8 @@ package com.melodyxxx.puredaily;
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.melodyxxx.puredaily.entity.DaoMaster;
-import com.melodyxxx.puredaily.entity.DaoSession;
+import com.melodyxxx.puredaily.entity.daily.DaoMaster;
+import com.melodyxxx.puredaily.entity.daily.DaoSession;
 
 public class App extends Application {
 

@@ -209,6 +209,7 @@ public class LatestFragment extends SubscriptionFragment {
                 now.get(Calendar.DAY_OF_MONTH)
         );
         Calendar min = Calendar.getInstance();
+        // 知乎日报第一天的起始日期为2013/05/19
         min.set(2013, 4, 19);
         dpd.setMinDate(min);
         Calendar max = Calendar.getInstance();
