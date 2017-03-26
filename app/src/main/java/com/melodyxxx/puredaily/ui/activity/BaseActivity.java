@@ -32,7 +32,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         static final int LIGHT_STATUS_BAR = 4;
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

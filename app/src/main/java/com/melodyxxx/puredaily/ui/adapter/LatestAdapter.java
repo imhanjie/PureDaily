@@ -15,6 +15,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.constant.PrefConstants;
 import com.melodyxxx.puredaily.entity.daily.Latest;
+import com.melodyxxx.puredaily.utils.L;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.widget.AutoViewPager;
 import com.melodyxxx.puredaily.widget.IndicatorView;

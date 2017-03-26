@@ -31,6 +31,7 @@ import com.melodyxxx.puredaily.dao.CollectionManager;
 import com.melodyxxx.puredaily.entity.daily.Collection;
 import com.melodyxxx.puredaily.entity.daily.NewsDetails;
 import com.melodyxxx.puredaily.utils.Blur;
+import com.melodyxxx.puredaily.utils.L;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.utils.SnackBarUtils;
 import com.wang.avi.AVLoadingIndicatorView;
@@ -239,7 +240,6 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !PrefUtils.getBoolean(activity, PrefConstants.MODE_NO_PIC, false)) {
             // Android 5.0+ && 没有开启无图模式 开启共享元素动画
             activity.startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(activity, view, activity.getString(R.string.transition_latest_with_latest_details)).toBundle());
-
         } else {
             activity.startActivity(intent);
         }

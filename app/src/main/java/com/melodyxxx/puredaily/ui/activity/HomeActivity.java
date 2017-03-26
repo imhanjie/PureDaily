@@ -25,14 +25,11 @@ import com.melodyxxx.puredaily.dao.CollectionManager;
 import com.melodyxxx.puredaily.dao.ThemeManager;
 import com.melodyxxx.puredaily.entity.app.LatestVersion;
 import com.melodyxxx.puredaily.entity.daily.Theme;
-import com.melodyxxx.puredaily.entity.daily.ThemeDetails;
 import com.melodyxxx.puredaily.http.app.AppApiManager;
-import com.melodyxxx.puredaily.http.daily.DailyApiManager;
 import com.melodyxxx.puredaily.ui.fragment.CollectionsFragment;
 import com.melodyxxx.puredaily.ui.fragment.LatestFragment;
 import com.melodyxxx.puredaily.ui.fragment.ThemesSubscribeFragment;
 import com.melodyxxx.puredaily.utils.CommonUtils;
-import com.melodyxxx.puredaily.utils.L;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.widget.PureAlertDialog;
 
@@ -41,7 +38,6 @@ import java.util.List;
 import butterknife.BindView;
 import rx.Observer;
 import rx.Subscription;
-import rx.functions.Action1;
 
 public class HomeActivity extends SubscriptionActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -192,7 +188,6 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
 
     @Override
     public void onBackPressed() {
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             mDrawerLayout.closeDrawer(GravityCompat.START);
         } else {
