@@ -6,11 +6,15 @@ import android.os.Bundle;
 
 import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.constant.PrefConstants;
+import com.melodyxxx.puredaily.entity.bmob.Person;
+import com.melodyxxx.puredaily.utils.L;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.widget.CheckBoxItemView;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import cn.bmob.v3.exception.BmobException;
+import cn.bmob.v3.listener.SaveListener;
 
 /**
  * Author:      Melodyxxx
@@ -38,6 +42,23 @@ public class SettingsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setToolbarTitle(R.string.activity_title_settings);
         init();
+        testBmob();
+    }
+
+    private void testBmob() {
+        Person p = new Person();
+        p.setName("hanjie");
+        p.setAddress("anqing");
+        p.save(new SaveListener<String>() {
+            @Override
+            public void done(String s, BmobException e) {
+                if (e == null) {
+                    L.e("添加数据成功，返回objectId为：" + s);
+                } else {
+                    L.e("创建数据失败：" + e.getMessage());
+                }
+            }
+        });
     }
 
     private void init() {

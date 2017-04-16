@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import com.melodyxxx.puredaily.entity.daily.DaoMaster;
 import com.melodyxxx.puredaily.entity.daily.DaoSession;
 
+import cn.bmob.v3.Bmob;
+
 public class App extends Application {
 
     private DaoMaster.DevOpenHelper mHelper;
@@ -19,8 +21,13 @@ public class App extends Application {
         super.onCreate();
         INSTANCE = this;
         initDatabase();
+        initBmob();
 //        CrashHandler crashHandler = CrashHandler.getInstance();
 //        crashHandler.init(getApplicationContext());
+    }
+
+    private void initBmob() {
+        Bmob.initialize(this, "3aaf1e4d34bea8d9d4f6b22f87ae3a30");
     }
 
     private void initDatabase() {
