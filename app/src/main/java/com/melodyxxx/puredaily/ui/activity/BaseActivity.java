@@ -1,18 +1,24 @@
 package com.melodyxxx.puredaily.ui.activity;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 
 import com.melodyxxx.puredaily.R;
+import com.melodyxxx.puredaily.constant.PrefConstants;
 import com.melodyxxx.puredaily.utils.ActivityCollector;
 import com.melodyxxx.puredaily.utils.ColorUtils;
+import com.melodyxxx.puredaily.utils.PrefUtils;
+import com.melodyxxx.puredaily.widget.PureAlertDialog;
 
 import butterknife.ButterKnife;
 
@@ -134,6 +140,37 @@ public abstract class BaseActivity extends AppCompatActivity {
                     WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
                     WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         }
+    }
+
+    protected boolean hasAccount() {
+        return !TextUtils.isEmpty(getCurrentUserName());
+    }
+
+    protected String getCurrentUserName() {
+        return PrefUtils.getString(this, PrefConstants.USER_NAME, "");
+    }
+
+    protected void showLoginServiceTipDialog() {
+        PureAlertDialog dialog = new PureAlertDialog(this, "登录账号", "登录账号即可云端备份、同步收藏日报以及订阅的主题。");
+        AlertDialog.Builder builder = dialog.getBuilder();
+        builder.setPositiveButton("登录", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                startLoginActivity();
+                dialog.dismiss();
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
+
+    private void startLoginActivity() {
+        LoginActivity.start(this);
     }
 
 }

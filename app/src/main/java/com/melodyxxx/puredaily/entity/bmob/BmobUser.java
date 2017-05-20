@@ -7,10 +7,15 @@ import cn.bmob.v3.BmobObject;
  * Created by hanjie on 2017/4/16.
  */
 
-public class Person extends BmobObject {
+public class BmobUser extends BmobObject {
 
     private String name;
-    private String address;
+    private String pwd;
+
+    public BmobUser(String name, String pwd) {
+        this.name = name;
+        this.pwd = pwd;
+    }
 
     public String getName() {
         return name;
@@ -20,11 +25,11 @@ public class Person extends BmobObject {
         this.name = name;
     }
 
-    public String getAddress() {
-        return address;
+    public String getPwd() {
+        return pwd;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
     }
 }

@@ -2,8 +2,10 @@ package com.melodyxxx.puredaily.ui.activity;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,16 +30,27 @@ import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.constant.PrefConstants;
 import com.melodyxxx.puredaily.dao.CollectionManager;
+import com.melodyxxx.puredaily.entity.bmob.BmobCollection;
+import com.melodyxxx.puredaily.entity.bmob.BmobUser;
 import com.melodyxxx.puredaily.entity.daily.Collection;
 import com.melodyxxx.puredaily.entity.daily.NewsDetails;
 import com.melodyxxx.puredaily.utils.Blur;
 import com.melodyxxx.puredaily.utils.L;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.utils.SnackBarUtils;
+import com.melodyxxx.puredaily.utils.Tip;
+import com.melodyxxx.puredaily.widget.LoadingDialog;
 import com.wang.avi.AVLoadingIndicatorView;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import cn.bmob.v3.BmobQuery;
+import cn.bmob.v3.exception.BmobException;
+import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.SaveListener;
+import cn.bmob.v3.listener.UpdateListener;
 import rx.Subscriber;
 import rx.Subscription;
 
@@ -64,9 +77,6 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
     @BindView(R.id.app_bar)
     AppBarLayout mAppBarLayout;
 
-    @BindView(R.id.loading)
-    AVLoadingIndicatorView mLoadingView;
-
     @BindView(R.id.tv_image_source)
     TextView mImageSource;
 
@@ -82,6 +92,7 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
     private int mId;
 
     private NewsDetails mNewsDetails;
+    private LoadingDialog mLoadingDialog = LoadingDialog.create();
 
     @Override
     public int getContentView() {
@@ -103,7 +114,6 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
         initCommentFab();
         initListener();
         initWebView();
-        startLoadingAnim();
         getDetailsData();
         hideGoToTopFab();
     }
@@ -116,22 +126,84 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
 
     @OnClick(R.id.fab_collect)
     public void onCommentFabClick() {
+        if (!hasAccount()) {
+            showLoginServiceTipDialog();
+            return;
+        }
+
+        final long time = System.currentTimeMillis();
+        final BmobCollection bmobCollection = new BmobCollection(getCurrentUserName(), mId, mNewsDetails.title, mNewsDetails.images[0], time);
+
         boolean isCollected = CollectionManager.isCollected(mId);
         if (isCollected) {
-            CollectionManager.deleteById(mId);
-            mCommentFab.setImageResource(R.drawable.ic_collect);
-            SnackBarUtils.makeShort(this, mWebView, getString(R.string.tip_cancel_collect)).show();
+            mLoadingDialog.showWith(getSupportFragmentManager(), "请稍后");
+            // 查询objectId
+            BmobQuery<BmobCollection> query = new BmobQuery<>();
+            query.addWhereEqualTo("name", getCurrentUserName());
+            query.addWhereEqualTo("id", mId);
+            query.setLimit(1);
+            query.findObjects(new FindListener<BmobCollection>() {
+                @Override
+                public void done(List<BmobCollection> object, BmobException e) {
+                    if (e == null) {
+                        if (object.size() == 0) {
+                            // 没有数据
+                            mLoadingDialog.dismiss();
+                            return;
+                        }
+                        // 查询到数据
+                        BmobCollection collection = new BmobCollection();
+                        collection.setObjectId(object.get(0).getObjectId());
+                        collection.delete(new UpdateListener() {
+                            @Override
+                            public void done(BmobException e) {
+                                mLoadingDialog.dismiss();
+                                if (e == null) {
+                                    Tip.with(DailyDetailsActivity.this).onNotice("取消收藏成功");
+                                    deleteLocalCollection();
+                                } else {
+                                    Tip.with(DailyDetailsActivity.this).onNotice("取消收藏失败" + e.getMessage());
+                                }
+                            }
+                        });
+                    } else {
+                        mLoadingDialog.dismiss();
+                    }
+                }
+            });
         } else {
-            Collection collection = new Collection(
-                    mId,
-                    mNewsDetails.title,
-                    mNewsDetails.images[0],
-                    System.currentTimeMillis()
-            );
-            CollectionManager.insert(collection);
-            mCommentFab.setImageResource(R.drawable.ic_collected);
-            SnackBarUtils.makeShort(this, mWebView, getString(R.string.tip_collected)).show();
+            mLoadingDialog.showWith(getSupportFragmentManager(), "正在收藏");
+            bmobCollection.save(new SaveListener<String>() {
+                @Override
+                public void done(String s, BmobException e) {
+                    mLoadingDialog.dismiss();
+                    if (e == null) {
+                        Tip.with(DailyDetailsActivity.this).onNotice("收藏成功");
+                        collectToLocal(time);
+                    } else {
+                        Tip.with(DailyDetailsActivity.this).onNotice("服务器异常:" + e.getMessage());
+                    }
+                }
+            });
         }
+    }
+
+    private void deleteLocalCollection() {
+        CollectionManager.deleteById(mId);
+        mCommentFab.setImageResource(R.drawable.ic_collect);
+        SnackBarUtils.makeShort(this, mWebView, getString(R.string.tip_cancel_collect)).show();
+    }
+
+    private void collectToLocal(long time) {
+        Collection collection = new Collection(
+                mId,
+                mNewsDetails.title,
+                mNewsDetails.images[0],
+                time
+        );
+        CollectionManager.insert(collection);
+        mCommentFab.setImageResource(R.drawable.ic_collected);
+        SnackBarUtils.makeShort(this, mWebView, getString(R.string.tip_collected)).show();
     }
 
     private void hideGoToTopFab() {
@@ -155,6 +227,7 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
                     @Override
                     public void onNext(NewsDetails newsDetails) {
                         onGetSuccess(newsDetails);
+                        onGetDone();
                     }
 
                     @Override
@@ -220,11 +293,11 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
     }
 
     private void onGetFailed(String errorMsg) {
-        SnackBarUtils.makeShort(DailyDetailsActivity.this, mLoadingView, errorMsg).show();
+        SnackBarUtils.makeShort(DailyDetailsActivity.this, mWebView, errorMsg).show();
     }
 
     private void onGetDone() {
-        stopLoadingAnim();
+
     }
 
     private void initWebView() {
@@ -283,14 +356,6 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
         shareIntent.putExtra(Intent.EXTRA_TEXT, sb.toString());
         shareIntent.setType("text/plain");
         startActivity(Intent.createChooser(shareIntent, getString(R.string.dialog_title_share)));
-    }
-
-    private void startLoadingAnim() {
-        mLoadingView.setVisibility(View.VISIBLE);
-    }
-
-    private void stopLoadingAnim() {
-        mLoadingView.setVisibility(View.GONE);
     }
 
     @Override

@@ -65,5 +65,6 @@
     <string name="action_themes_subscribe">订阅</string>
     <string name="no_themes">没有可订阅的主题</string>
     <string name="fragment_title_themes_subscribe">主题订阅</string>
+    <string name="action_account">账户</string>
 
 </resources>

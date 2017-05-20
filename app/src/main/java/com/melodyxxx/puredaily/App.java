@@ -3,6 +3,7 @@ package com.melodyxxx.puredaily;
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.facebook.stetho.Stetho;
 import com.melodyxxx.puredaily.entity.daily.DaoMaster;
 import com.melodyxxx.puredaily.entity.daily.DaoSession;
 
@@ -22,6 +23,7 @@ public class App extends Application {
         INSTANCE = this;
         initDatabase();
         initBmob();
+        Stetho.initializeWithDefaults(this);
 //        CrashHandler crashHandler = CrashHandler.getInstance();
 //        crashHandler.init(getApplicationContext());
     }

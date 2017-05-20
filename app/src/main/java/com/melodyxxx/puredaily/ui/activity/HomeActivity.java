@@ -12,6 +12,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SwitchCompat;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -23,14 +24,17 @@ import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.constant.PrefConstants;
 import com.melodyxxx.puredaily.dao.CollectionManager;
 import com.melodyxxx.puredaily.dao.ThemeManager;
+import com.melodyxxx.puredaily.entity.app.DeleteCollections;
 import com.melodyxxx.puredaily.entity.app.LatestVersion;
 import com.melodyxxx.puredaily.entity.daily.Theme;
 import com.melodyxxx.puredaily.http.app.AppApiManager;
+import com.melodyxxx.puredaily.rx.RxBus;
 import com.melodyxxx.puredaily.ui.fragment.CollectionsFragment;
 import com.melodyxxx.puredaily.ui.fragment.LatestFragment;
 import com.melodyxxx.puredaily.ui.fragment.ThemesSubscribeFragment;
 import com.melodyxxx.puredaily.utils.CommonUtils;
 import com.melodyxxx.puredaily.utils.PrefUtils;
+import com.melodyxxx.puredaily.utils.SnackBarUtils;
 import com.melodyxxx.puredaily.widget.PureAlertDialog;
 
 import java.util.List;
@@ -38,6 +42,7 @@ import java.util.List;
 import butterknife.BindView;
 import rx.Observer;
 import rx.Subscription;
+import rx.functions.Action1;
 
 public class HomeActivity extends SubscriptionActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -78,6 +83,7 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
         if (PrefUtils.getBoolean(this, PrefConstants.AUTO_CHECK_APP_UPDATE, PrefConstants.DEFAULT_CHECK_APP_UPDATE)) {
             checkLatestVersionInfo();
         }
+        registerExitEvent();
     }
 
     private void checkLatestVersionInfo() {
@@ -161,6 +167,16 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
         }
     }
 
+    private void registerExitEvent() {
+        RxBus.getInstance().toObservable(DeleteCollections.class)
+                .subscribe(new Action1<DeleteCollections>() {
+                    @Override
+                    public void call(DeleteCollections event) {
+                        updateCollectionsCount();
+                    }
+                });
+    }
+
     public void updateCollectionsCount() {
         mCollectionsCount.setText(String.valueOf(CollectionManager.count()));
     }
@@ -221,6 +237,9 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
             @Override
             public void run() {
                 switch (itemId) {
+                    case R.id.nav_account:
+                        showAccountDialog();
+                        break;
                     case R.id.nav_latest_daily: {
                         LatestFragment latestFragment = new LatestFragment();
                         switchFragment(latestFragment);
@@ -228,14 +247,22 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
                         break;
                     }
                     case R.id.nav_collections: {
-                        CollectionsFragment collectionsFragment = new CollectionsFragment();
-                        switchFragment(collectionsFragment);
+                        if (hasAccount()) {
+                            CollectionsFragment collectionsFragment = new CollectionsFragment();
+                            switchFragment(collectionsFragment);
+                        } else {
+                            showLoginServiceTipDialog();
+                        }
                         mDrawerLayout.closeDrawer(GravityCompat.START);
                         break;
                     }
                     case R.id.nav_themes_subscribe: {
-                        ThemesSubscribeFragment themesSubscribeFragment = new ThemesSubscribeFragment();
-                        switchFragment(themesSubscribeFragment);
+                        if (hasAccount()) {
+                            ThemesSubscribeFragment themesSubscribeFragment = new ThemesSubscribeFragment();
+                            switchFragment(themesSubscribeFragment);
+                        } else {
+                            showLoginServiceTipDialog();
+                        }
                         mDrawerLayout.closeDrawer(GravityCompat.START);
                         break;
                     }
@@ -254,6 +281,33 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
             }
         }, 300);
         return false;
+    }
+
+    private void showAccountDialog() {
+        if (hasAccount()) {
+            PureAlertDialog dialog = new PureAlertDialog(this, "提示", "当前已登录账号\"" + PrefUtils.getString(this, PrefConstants.USER_NAME, "") + "\"");
+            AlertDialog.Builder builder = dialog.getBuilder();
+            builder.setPositiveButton("退出当前账号", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    PrefUtils.putString(HomeActivity.this, PrefConstants.USER_NAME, null);
+                    PrefUtils.putString(HomeActivity.this, PrefConstants.USER_PWD, null);
+                    CollectionManager.deleteAll();
+                    ThemeManager.deleteAll();
+                    RxBus.getInstance().send(new DeleteCollections());
+                    dialog.dismiss();
+                }
+            });
+            builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            dialog.show();
+            return;
+        }
+        showLoginServiceTipDialog();
     }
 
     private int getIconResIdByThemeId(int id) {

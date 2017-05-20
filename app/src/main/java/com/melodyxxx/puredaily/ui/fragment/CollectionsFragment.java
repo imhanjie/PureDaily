@@ -16,6 +16,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.melodyxxx.puredaily.R;
+import com.melodyxxx.puredaily.entity.app.DeleteCollections;
+import com.melodyxxx.puredaily.rx.RxBus;
 import com.melodyxxx.puredaily.ui.adapter.BaseAdapter;
 import com.melodyxxx.puredaily.ui.adapter.CollectionsAdapter;
 import com.melodyxxx.puredaily.constant.PrefConstants;
@@ -39,6 +41,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -92,7 +95,18 @@ public class CollectionsFragment extends SubscriptionFragment {
         ((HomeActivity) getActivity()).setToolbarTitle(R.string.fragment_title_collections);
         View view = inflater.inflate(R.layout.fragment_collections, container, false);
         ButterKnife.bind(this, view);
+        registerExitEvent();
         return view;
+    }
+
+    private void registerExitEvent() {
+        RxBus.getInstance().toObservable(DeleteCollections.class)
+                .subscribe(new Action1<DeleteCollections>() {
+                    @Override
+                    public void call(DeleteCollections event) {
+                        getDataFromDatabase();
+                    }
+                });
     }
 
     private void initRecyclerView() {

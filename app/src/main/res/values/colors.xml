@@ -18,4 +18,5 @@
     <!--<color name="un_subscribe_color">#99bfbfbf</color>-->
     <color name="subscribed_color">#ffffff</color>
     <color name="un_subscribe_color">#99a9a9a9</color>
+    <color name="gray">#cacaca</color>
 </resources>

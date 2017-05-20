@@ -11,4 +11,7 @@ public class PrefConstants {
     public static final String COLLECTIONS_TIPS_SHOWED = "collections_tips_showed";
     public static final String THEMES_SUBSCRIBE_TIPS_SHOWED = "themes_subscribe_tips_showed";
 
+    public static final String USER_NAME = "user_name";
+    public static final String USER_PWD = "user_pwd";
+
 }
