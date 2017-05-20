@@ -18,6 +18,7 @@ import com.melodyxxx.puredaily.entity.bmob.BmobUser;
 import com.melodyxxx.puredaily.entity.daily.Collection;
 import com.melodyxxx.puredaily.entity.daily.Theme;
 import com.melodyxxx.puredaily.rx.RxBus;
+import com.melodyxxx.puredaily.utils.L;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.utils.Tip;
 import com.melodyxxx.puredaily.widget.LoadingDialog;
@@ -173,12 +174,14 @@ public class LoginActivity extends SubscriptionActivity {
                     if (object.size() == 0) {
                         // 没有数据
                         Tip.with(LoginActivity.this).onNotice("用户名或密码错误");
+                        mLoadingDialog.dismiss();
                         return;
                     }
                     // 查询到数据
                     loginSuccess(name, pwd);
                 } else {
                     Tip.with(LoginActivity.this).onNotice("服务器异常:" + e.getMessage());
+                    mLoadingDialog.dismiss();
                 }
             }
         });
@@ -198,17 +201,16 @@ public class LoginActivity extends SubscriptionActivity {
             public void done(List<BmobCollection> collections, BmobException e) {
                 if (e == null) {
                     if (collections.size() == 0) {
+                        mLoadingDialog.dismiss();
                         return;
                     }
                     // 查询到数据mLoadingDialog
                     insertCollectionsToLocal(collections);
-                    RxBus.getInstance().send(new AccountStatusChanged());
                     BmobQuery<BmobTheme> query = new BmobQuery<>();
                     query.addWhereEqualTo("name", name);
                     query.findObjects(new FindListener<BmobTheme>() {
                         @Override
                         public void done(List<BmobTheme> themes, BmobException e) {
-                            mLoadingDialog.dismiss();
                             if (e == null) {
                                 if (themes.size() == 0) {
                                     return;
@@ -222,6 +224,7 @@ public class LoginActivity extends SubscriptionActivity {
                     });
                 } else {
                     Tip.with(LoginActivity.this).onNotice("服务器异常:" + e.getMessage());
+                    mLoadingDialog.dismiss();
                 }
             }
         });

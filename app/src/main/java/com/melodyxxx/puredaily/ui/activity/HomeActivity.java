@@ -269,6 +269,9 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
                         AboutActivity.startAboutActivity(HomeActivity.this);
                         break;
                     }
+                    default:
+                        ThemeActivity.start(HomeActivity.this, itemId);
+                        break;
                 }
             }
         }, 300);

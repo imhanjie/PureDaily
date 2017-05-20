@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,7 +16,9 @@ import android.widget.LinearLayout;
 
 import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.entity.app.AccountStatusChanged;
+import com.melodyxxx.puredaily.entity.bmob.BmobCollection;
 import com.melodyxxx.puredaily.rx.RxBus;
+import com.melodyxxx.puredaily.ui.activity.LoginActivity;
 import com.melodyxxx.puredaily.ui.adapter.BaseAdapter;
 import com.melodyxxx.puredaily.ui.adapter.CollectionsAdapter;
 import com.melodyxxx.puredaily.constant.PrefConstants;
@@ -30,13 +31,23 @@ import com.melodyxxx.puredaily.utils.DividerItemDecoration;
 import com.melodyxxx.puredaily.utils.MenuTintUtils;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.utils.SnackBarUtils;
+import com.melodyxxx.puredaily.utils.Tip;
+import com.melodyxxx.puredaily.widget.LoadingDialog;
 import com.melodyxxx.puredaily.widget.PureAlertDialog;
 import com.wang.avi.AVLoadingIndicatorView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import cn.bmob.v3.BmobBatch;
+import cn.bmob.v3.BmobObject;
+import cn.bmob.v3.BmobQuery;
+import cn.bmob.v3.datatype.BatchResult;
+import cn.bmob.v3.exception.BmobException;
+import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.QueryListListener;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -63,7 +74,8 @@ public class CollectionsFragment extends SubscriptionFragment {
 
     private CollectionsAdapter mAdapter;
 
-    private List<Collection> mCollections;
+    private List<Collection> mCollections = new ArrayList<>();
+    private LoadingDialog mLoadingDialog = LoadingDialog.create();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -192,7 +204,9 @@ public class CollectionsFragment extends SubscriptionFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_clear_all_collections: {
-                clearAllCollections();
+                if (mCollections.size() != 0) {
+                    clearAllCollections();
+                }
                 break;
             }
         }
@@ -205,11 +219,8 @@ public class CollectionsFragment extends SubscriptionFragment {
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                CollectionManager.deleteAll();
-                getDataFromDatabase();
-                ((HomeActivity) getActivity()).updateCollectionsCount();
-                SnackBarUtils.makeShort(getContext(), mEmptyView, getString(R.string.tip_clear_all_collections)).show();
                 dialog.dismiss();
+                queryByUserName();
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -219,6 +230,52 @@ public class CollectionsFragment extends SubscriptionFragment {
             }
         });
         dialog.show();
+    }
+
+    private void queryByUserName() {
+        mLoadingDialog.showWith(getFragmentManager(), "正在删除");
+        BmobQuery<BmobCollection> query = new BmobQuery<>();
+        query.addWhereEqualTo("name", getCurrentUserName());
+        query.findObjects(new FindListener<BmobCollection>() {
+            @Override
+            public void done(List<BmobCollection> collections, BmobException e) {
+                if (e == null) {
+                    if (collections.size() == 0) {
+                        return;
+                    }
+                    batchDelete(collections);
+                } else {
+                    Tip.with(getContext()).onNotice("服务器异常:" + e.getMessage());
+                    mLoadingDialog.dismiss();
+                }
+            }
+        });
+    }
+
+    private void batchDelete(List<BmobCollection> collections) {
+        ArrayList<BmobObject> bmobObjects = new ArrayList<>();
+        for (BmobCollection collection : collections) {
+            BmobCollection c = new BmobCollection();
+            c.setObjectId(collection.getObjectId());
+            bmobObjects.add(c);
+        }
+        new BmobBatch().deleteBatch(bmobObjects).doBatch(new QueryListListener<BatchResult>() {
+            @Override
+            public void done(List<BatchResult> o, BmobException e) {
+                mLoadingDialog.dismiss();
+                if (e == null) {
+                    deleteFromLocal();
+                } else {
+                    Tip.with(getContext()).onNotice("服务器异常:" + e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void deleteFromLocal() {
+        CollectionManager.deleteAll();
+        getDataFromDatabase();
+        SnackBarUtils.makeShort(getContext(), mEmptyView, getString(R.string.tip_clear_all_collections)).show();
     }
 
     @Override
