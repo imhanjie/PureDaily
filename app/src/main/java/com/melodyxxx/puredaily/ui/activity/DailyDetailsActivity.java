@@ -159,7 +159,7 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
                             public void done(BmobException e) {
                                 mLoadingDialog.dismiss();
                                 if (e == null) {
-                                    Tip.with(DailyDetailsActivity.this).onNotice("取消收藏成功");
+                                    Tip.with(DailyDetailsActivity.this).onSuccess("取消收藏成功");
                                     deleteLocalCollection();
                                 } else {
                                     Tip.with(DailyDetailsActivity.this).onNotice("取消收藏失败" + e.getMessage());
@@ -178,7 +178,7 @@ public class DailyDetailsActivity extends SubscriptionActivity implements Nested
                 public void done(String s, BmobException e) {
                     mLoadingDialog.dismiss();
                     if (e == null) {
-                        Tip.with(DailyDetailsActivity.this).onNotice("收藏成功");
+                        Tip.with(DailyDetailsActivity.this).onSuccess("收藏成功");
                         collectToLocal(time);
                     } else {
                         Tip.with(DailyDetailsActivity.this).onNotice("服务器异常:" + e.getMessage());

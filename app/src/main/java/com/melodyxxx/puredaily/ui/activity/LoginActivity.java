@@ -11,9 +11,13 @@ import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.constant.PrefConstants;
 import com.melodyxxx.puredaily.dao.CollectionManager;
 import com.melodyxxx.puredaily.dao.ThemeManager;
+import com.melodyxxx.puredaily.entity.app.AccountStatusChanged;
 import com.melodyxxx.puredaily.entity.bmob.BmobCollection;
+import com.melodyxxx.puredaily.entity.bmob.BmobTheme;
 import com.melodyxxx.puredaily.entity.bmob.BmobUser;
 import com.melodyxxx.puredaily.entity.daily.Collection;
+import com.melodyxxx.puredaily.entity.daily.Theme;
+import com.melodyxxx.puredaily.rx.RxBus;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.utils.Tip;
 import com.melodyxxx.puredaily.widget.LoadingDialog;
@@ -139,7 +143,7 @@ public class LoginActivity extends SubscriptionActivity {
             public void done(String s, BmobException e) {
                 mLoadingDialog.dismiss();
                 if (e == null) {
-                    Tip.with(LoginActivity.this).onNotice("注册成功");
+                    Tip.with(LoginActivity.this).onSuccess("注册成功");
                     mSwitchTv.performClick();
                 } else {
                     Tip.with(LoginActivity.this).onNotice("服务器异常:" + e.getMessage());
@@ -180,31 +184,55 @@ public class LoginActivity extends SubscriptionActivity {
         });
     }
 
-    private void loginSuccess(String name, String pwd) {
-        Tip.with(LoginActivity.this).onNotice("登录成功");
+    private void loginSuccess(final String name, final String pwd) {
+        Tip.with(LoginActivity.this).onSuccess("登录成功");
         PrefUtils.putString(LoginActivity.this, PrefConstants.USER_NAME, name);
         PrefUtils.putString(LoginActivity.this, PrefConstants.USER_PWD, pwd);
         CollectionManager.deleteAll();
         ThemeManager.deleteAll();
-        mLoadingDialog.showWith(getSupportFragmentManager(),"正在同步");
+        mLoadingDialog.showWith(getSupportFragmentManager(), "正在同步");
         BmobQuery<BmobCollection> query = new BmobQuery<>();
         query.addWhereEqualTo("name", name);
         query.findObjects(new FindListener<BmobCollection>() {
             @Override
             public void done(List<BmobCollection> collections, BmobException e) {
-                mLoadingDialog.dismiss();
                 if (e == null) {
                     if (collections.size() == 0) {
                         return;
                     }
-                    // 查询到数据
+                    // 查询到数据mLoadingDialog
                     insertCollectionsToLocal(collections);
+                    RxBus.getInstance().send(new AccountStatusChanged());
+                    BmobQuery<BmobTheme> query = new BmobQuery<>();
+                    query.addWhereEqualTo("name", name);
+                    query.findObjects(new FindListener<BmobTheme>() {
+                        @Override
+                        public void done(List<BmobTheme> themes, BmobException e) {
+                            mLoadingDialog.dismiss();
+                            if (e == null) {
+                                if (themes.size() == 0) {
+                                    return;
+                                }
+                                insertThemesToLocal(themes);
+                                RxBus.getInstance().send(new AccountStatusChanged());
+                            } else {
+                                Tip.with(LoginActivity.this).onNotice("服务器异常:" + e.getMessage());
+                            }
+                        }
+                    });
                 } else {
                     Tip.with(LoginActivity.this).onNotice("服务器异常:" + e.getMessage());
                 }
             }
         });
         finish();
+    }
+
+    private void insertThemesToLocal(List<BmobTheme> themes) {
+        for (BmobTheme theme : themes) {
+            Theme t = new Theme(theme.getId(), theme.getColor(), theme.getThumbnail(), theme.getDescription(), theme.getThemeName(), theme.getTime());
+            ThemeManager.insert(t);
+        }
     }
 
     private void insertCollectionsToLocal(List<BmobCollection> collections) {

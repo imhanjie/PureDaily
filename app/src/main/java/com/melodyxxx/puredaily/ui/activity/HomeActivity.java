@@ -12,7 +12,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SwitchCompat;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -24,7 +23,7 @@ import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.constant.PrefConstants;
 import com.melodyxxx.puredaily.dao.CollectionManager;
 import com.melodyxxx.puredaily.dao.ThemeManager;
-import com.melodyxxx.puredaily.entity.app.DeleteCollections;
+import com.melodyxxx.puredaily.entity.app.AccountStatusChanged;
 import com.melodyxxx.puredaily.entity.app.LatestVersion;
 import com.melodyxxx.puredaily.entity.daily.Theme;
 import com.melodyxxx.puredaily.http.app.AppApiManager;
@@ -34,7 +33,6 @@ import com.melodyxxx.puredaily.ui.fragment.LatestFragment;
 import com.melodyxxx.puredaily.ui.fragment.ThemesSubscribeFragment;
 import com.melodyxxx.puredaily.utils.CommonUtils;
 import com.melodyxxx.puredaily.utils.PrefUtils;
-import com.melodyxxx.puredaily.utils.SnackBarUtils;
 import com.melodyxxx.puredaily.widget.PureAlertDialog;
 
 import java.util.List;
@@ -154,7 +152,7 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
         updateSubscribedMenu();
     }
 
-    public void updateSubscribedMenu() {
+        public void updateSubscribedMenu() {
         Menu menu = mNavigationView.getMenu();
         menu.removeGroup(SUBSCRIBED_MENU_GROUP_ID);
         // 获取已订阅的主题
@@ -168,11 +166,12 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
     }
 
     private void registerExitEvent() {
-        RxBus.getInstance().toObservable(DeleteCollections.class)
-                .subscribe(new Action1<DeleteCollections>() {
+        RxBus.getInstance().toObservable(AccountStatusChanged.class)
+                .subscribe(new Action1<AccountStatusChanged>() {
                     @Override
-                    public void call(DeleteCollections event) {
+                    public void call(AccountStatusChanged event) {
                         updateCollectionsCount();
+                        updateSubscribedMenu();
                     }
                 });
     }
@@ -270,13 +269,6 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
                         AboutActivity.startAboutActivity(HomeActivity.this);
                         break;
                     }
-                    case R.id.nav_settings: {
-                        SettingsActivity.start(HomeActivity.this);
-                        break;
-                    }
-                    default:
-                        ThemeActivity.start(HomeActivity.this, itemId);
-                        break;
                 }
             }
         }, 300);
@@ -294,7 +286,7 @@ public class HomeActivity extends SubscriptionActivity implements NavigationView
                     PrefUtils.putString(HomeActivity.this, PrefConstants.USER_PWD, null);
                     CollectionManager.deleteAll();
                     ThemeManager.deleteAll();
-                    RxBus.getInstance().send(new DeleteCollections());
+                    RxBus.getInstance().send(new AccountStatusChanged());
                     dialog.dismiss();
                 }
             });

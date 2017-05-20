@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 
 import com.melodyxxx.puredaily.R;
 import com.melodyxxx.puredaily.constant.PrefConstants;
+import com.melodyxxx.puredaily.entity.bmob.BmobTheme;
 import com.melodyxxx.puredaily.entity.daily.Theme;
 import com.melodyxxx.puredaily.http.daily.DailyApiManager;
 import com.melodyxxx.puredaily.ui.activity.HomeActivity;
@@ -23,6 +24,8 @@ import com.melodyxxx.puredaily.ui.adapter.ThemesSubscribeAdapter;
 import com.melodyxxx.puredaily.utils.Blur;
 import com.melodyxxx.puredaily.utils.PrefUtils;
 import com.melodyxxx.puredaily.utils.SnackBarUtils;
+import com.melodyxxx.puredaily.utils.Tip;
+import com.melodyxxx.puredaily.widget.LoadingDialog;
 import com.melodyxxx.puredaily.widget.PureAlertDialog;
 import com.melodyxxx.puredaily.widget.SubscribeTextView;
 import com.wang.avi.AVLoadingIndicatorView;
@@ -31,6 +34,11 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import cn.bmob.v3.BmobQuery;
+import cn.bmob.v3.exception.BmobException;
+import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.SaveListener;
+import cn.bmob.v3.listener.UpdateListener;
 import rx.Subscriber;
 import rx.Subscription;
 
@@ -65,6 +73,7 @@ public class ThemesSubscribeFragment extends SubscriptionFragment {
     private boolean mTurnBlurOne = false;
 
     private int mLastPosition = -1;
+    private LoadingDialog mLoadingDialog = LoadingDialog.create();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -115,39 +124,106 @@ public class ThemesSubscribeFragment extends SubscriptionFragment {
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(RecyclerView.ViewHolder holder, int position) {
-                SubscribeTextView subscribeTextView = ((ThemesSubscribeAdapter.MyViewHolder) holder).subscribeTextView;
-                boolean isSubscribed = subscribeTextView.isSubscribed();
-                mAdapter.setSubscribe(position, !isSubscribed);
-                subscribeTextView.setSubscribe(!isSubscribed);
-                ((HomeActivity) getActivity()).updateSubscribedMenu();
-                if (position == mLastPosition || isSubscribed) {
-                    return;
+            public void onItemClick(final RecyclerView.ViewHolder holder, final int position) {
+                final SubscribeTextView subscribeTextView = ((ThemesSubscribeAdapter.MyViewHolder) holder).subscribeTextView;
+                final boolean isSubscribed = subscribeTextView.isSubscribed();
+                Theme clickTheme = mThemes.get(position);
+                if (!isSubscribed) {
+                    // 未订阅
+                    mLoadingDialog.showWith(getFragmentManager(), "正在订阅");
+                    BmobTheme bmobTheme = new BmobTheme();
+                    bmobTheme.setName(getCurrentUserName());
+                    bmobTheme.setId(clickTheme.getId());
+                    bmobTheme.setColor(clickTheme.getColor());
+                    bmobTheme.setThumbnail(clickTheme.getThumbnail());
+                    bmobTheme.setDescription(clickTheme.getDescription());
+                    bmobTheme.setThemeName(clickTheme.getName());
+                    bmobTheme.setTime(System.currentTimeMillis());
+                    bmobTheme.save(new SaveListener<String>() {
+                        @Override
+                        public void done(String s, BmobException e) {
+                            mLoadingDialog.dismiss();
+                            if (e == null) {
+                                Tip.with(getContext()).onSuccess("订阅成功");
+                                successFromServer(holder, position);
+                            } else {
+                                Tip.with(getContext()).onNotice("服务器异常:" + e.getMessage());
+                            }
+                        }
+                    });
+                } else {
+                    // 已订阅
+                    mLoadingDialog.showWith(getFragmentManager(), "请稍后");
+                    // 查询objectId
+                    BmobQuery<BmobTheme> query = new BmobQuery<>();
+                    query.addWhereEqualTo("name", getCurrentUserName());
+                    query.addWhereEqualTo("id", clickTheme.getId());
+                    query.setLimit(1);
+                    query.findObjects(new FindListener<BmobTheme>() {
+                        @Override
+                        public void done(List<BmobTheme> object, BmobException e) {
+                            if (e == null) {
+                                if (object.size() == 0) {
+                                    // 没有数据
+                                    mLoadingDialog.dismiss();
+                                    return;
+                                }
+                                // 查询到数据
+                                BmobTheme bmobTheme = new BmobTheme();
+                                bmobTheme.setObjectId(object.get(0).getObjectId());
+                                bmobTheme.delete(new UpdateListener() {
+                                    @Override
+                                    public void done(BmobException e) {
+                                        mLoadingDialog.dismiss();
+                                        if (e == null) {
+                                            Tip.with(getContext()).onSuccess("取消订阅成功");
+                                            successFromServer(holder, position);
+                                        } else {
+                                            Tip.with(getContext()).onNotice("取消订阅失败" + e.getMessage());
+                                        }
+                                    }
+                                });
+                            } else {
+                                mLoadingDialog.dismiss();
+                            }
+                        }
+                    });
                 }
-                Blur blur = new Blur(getContext(), ((ThemesSubscribeAdapter.MyViewHolder) holder).themeImage, mTurnBlurOne ? mBlurOneView : mBlurTwoView);
-                blur.blur(32, 25);
-                ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
-                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        float currentAnimatedValue = (float) animation.getAnimatedValue();
-                        if (mTurnBlurOne) {
-                            mBlurOneView.setAlpha(currentAnimatedValue);
-                            mBlurTwoView.setAlpha(1 - currentAnimatedValue);
-                        } else {
-                            mBlurTwoView.setAlpha(currentAnimatedValue);
-                            mBlurOneView.setAlpha(1 - currentAnimatedValue);
-                        }
-                        if (currentAnimatedValue == 1f) {
-                            mTurnBlurOne = !mTurnBlurOne;
-                        }
-                    }
-                });
-                animator.setDuration(400);
-                animator.start();
-                mLastPosition = position;
             }
         });
+    }
+
+    private void successFromServer(RecyclerView.ViewHolder holder, int position) {
+        final SubscribeTextView subscribeTextView = ((ThemesSubscribeAdapter.MyViewHolder) holder).subscribeTextView;
+        final boolean isSubscribed = subscribeTextView.isSubscribed();
+        mAdapter.setSubscribe(position, !isSubscribed);
+        subscribeTextView.setSubscribe(!isSubscribed);
+        ((HomeActivity) getActivity()).updateSubscribedMenu();
+        if (position == mLastPosition || isSubscribed) {
+            return;
+        }
+        Blur blur = new Blur(getContext(), ((ThemesSubscribeAdapter.MyViewHolder) holder).themeImage, mTurnBlurOne ? mBlurOneView : mBlurTwoView);
+        blur.blur(32, 25);
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float currentAnimatedValue = (float) animation.getAnimatedValue();
+                if (mTurnBlurOne) {
+                    mBlurOneView.setAlpha(currentAnimatedValue);
+                    mBlurTwoView.setAlpha(1 - currentAnimatedValue);
+                } else {
+                    mBlurTwoView.setAlpha(currentAnimatedValue);
+                    mBlurOneView.setAlpha(1 - currentAnimatedValue);
+                }
+                if (currentAnimatedValue == 1f) {
+                    mTurnBlurOne = !mTurnBlurOne;
+                }
+            }
+        });
+        animator.setDuration(400);
+        animator.start();
+        mLastPosition = position;
     }
 
     /**

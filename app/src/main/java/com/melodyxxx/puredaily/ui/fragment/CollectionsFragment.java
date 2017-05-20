@@ -16,7 +16,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.melodyxxx.puredaily.R;
-import com.melodyxxx.puredaily.entity.app.DeleteCollections;
+import com.melodyxxx.puredaily.entity.app.AccountStatusChanged;
 import com.melodyxxx.puredaily.rx.RxBus;
 import com.melodyxxx.puredaily.ui.adapter.BaseAdapter;
 import com.melodyxxx.puredaily.ui.adapter.CollectionsAdapter;
@@ -100,10 +100,10 @@ public class CollectionsFragment extends SubscriptionFragment {
     }
 
     private void registerExitEvent() {
-        RxBus.getInstance().toObservable(DeleteCollections.class)
-                .subscribe(new Action1<DeleteCollections>() {
+        RxBus.getInstance().toObservable(AccountStatusChanged.class)
+                .subscribe(new Action1<AccountStatusChanged>() {
                     @Override
-                    public void call(DeleteCollections event) {
+                    public void call(AccountStatusChanged event) {
                         getDataFromDatabase();
                     }
                 });
@@ -121,25 +121,25 @@ public class CollectionsFragment extends SubscriptionFragment {
                 DailyDetailsActivity.start(getActivity(), (int) mCollections.get(position).getId(), ((CollectionsAdapter.MyViewHolder) holder).image);
             }
         });
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                int deletePosition = viewHolder.getLayoutPosition();
-                CollectionManager.deleteById(mCollections.get(deletePosition).getId());
-                mAdapter.delete(deletePosition);
-                ((HomeActivity) getActivity()).updateCollectionsCount();
-                if (CollectionManager.count() == 0) {
-                    displayEmptyView();
-                }
-            }
-        });
-        itemTouchHelper.attachToRecyclerView(mRecyclerView);
+//        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+//
+//            @Override
+//            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+//                return false;
+//            }
+//
+//            @Override
+//            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+//                int deletePosition = viewHolder.getLayoutPosition();
+//                CollectionManager.deleteById(mCollections.get(deletePosition).getId());
+//                mAdapter.delete(deletePosition);
+//                ((HomeActivity) getActivity()).updateCollectionsCount();
+//                if (CollectionManager.count() == 0) {
+//                    displayEmptyView();
+//                }
+//            }
+//        });
+//        itemTouchHelper.attachToRecyclerView(mRecyclerView);
     }
 
     /**
